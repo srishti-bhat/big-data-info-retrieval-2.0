@@ -5,21 +5,21 @@ The pipeline takes in a large set of text documents and a set of user defined qu
 ## Spark Topology
 
 <figure align="center">
-  <img
+  <img width="600" height="300"
   src="https://i.imgur.com/o77Prvh.png"
   alt="Tokenisation of News Articles.">
   <figcaption>Tokenisation of News Articles</figcaption>
 </figure>
 
 <figure align="center">
-  <img
+  <img width="600" height="300"
   src="https://i.imgur.com/a1O1b6H.png"
   alt="Calculation of Total Frequency of each term in the entire dataset.">
   <figcaption>Calculation of Total Frequency of each term in the entire dataset</figcaption>
 </figure>
 
 <figure align="center">
-  <img
+  <img width="600" height="300"
   src="https://i.imgur.com/ws7OBMx.png"
   alt="Ranking of Document against each query.">
   <figcaption>Ranking of Document against each query</figcaption>
