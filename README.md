@@ -12,14 +12,14 @@ The pipeline takes in a large set of text documents and a set of user defined qu
 </figure>
 
 <figure align="center">
-  <img width="900" height="480"
+  <img width="900" height="500"
   src="https://i.imgur.com/PPdADsb.png"
   alt="Calculation of Total Frequency of each term in the entire dataset.">
   <figcaption>Calculation of Total Frequency of each term in the entire dataset</figcaption>
 </figure>
 
 <figure align="center">
-  <img width="900" height="220"
+  <img width="900" height="200"
   src="https://i.imgur.com/pU9ak0R.png"
   alt="Ranking of Document against each query.">
   <figcaption>Ranking of Document against each query</figcaption>
