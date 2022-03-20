@@ -36,14 +36,10 @@ public class RedundancyCheck implements MapFunction<DocumentRanking,DocumentRank
             if (flag == 0) {
                 outputResultsSet.add(inputDoc);
             }
-
             if (outputResultsSet.size() == 10) {
                 break;
-            }
-           
+            } 
         }; 
-
-        
         return new DocumentRanking(documentRanking.getQuery(), outputResultsSet);
     }
 

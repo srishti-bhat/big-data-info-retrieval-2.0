@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.ReduceFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoder;
@@ -27,6 +28,7 @@ import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
+import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.studentfunctions.DPHCalcMapper;
 import uk.ac.gla.dcs.bigdata.studentfunctions.NewsArticleTermMapper;
 import uk.ac.gla.dcs.bigdata.studentfunctions.RedundancyCheck;
@@ -48,6 +50,10 @@ import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 public class AssessedExercise {
 
 	
+	private static DocumentRanking reduce;
+
+
+
 	public static void main(String[] args) {
 		
 		
@@ -143,6 +149,7 @@ public class AssessedExercise {
 		Dataset<NewsArticle> newsTokenized = news.map(new TestTokenize(totalDocumentLengthInCorpusAcc, totalDocsInCorpusAcc), Encoders.bean(NewsArticle.class));
 		List<NewsArticle> newsList = newsTokenized.collectAsList();
 		List<NewsArticle> originalNewsList = news.collectAsList();
+
 		double averageDocumentLengthInCorpus = totalDocumentLengthInCorpusAcc.value() / totalDocsInCorpusAcc.value();
 
 		Broadcast<List<Query>> queryBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryList);
@@ -180,6 +187,7 @@ public class AssessedExercise {
 				originalNewsArticleListBroadcast
 				), 
 			Encoders.bean(DocumentRanking.class));
+		
 
 		Dataset<DocumentRanking> documentRankingFinal = documentRanking.map(new RedundancyCheck(), Encoders.bean(DocumentRanking.class));
 		

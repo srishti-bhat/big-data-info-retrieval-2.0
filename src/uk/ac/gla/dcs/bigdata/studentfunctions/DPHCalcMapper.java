@@ -100,13 +100,6 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
                         termFrequencyInCorpus.setValue(corpusTerm._2.shortValue());
                     }
                 });
-
-                int v1 = termFrequencyInDocument.value().shortValue();
-                long v = termFrequencyInDocument.sum();
-                int v2 = (int)termFrequencyInCorpus.sum();
-                int v3 = (int)currDocumentLength.sum();
-                Double v4 = averageDocumentLengthBroadcast.value();
-                long v5 = totalDocsCountBroadcast.value().longValue();
                 
                 score = DPHScorer.getDPHScore(
                     termFrequencyInDocument.value().shortValue(), 
