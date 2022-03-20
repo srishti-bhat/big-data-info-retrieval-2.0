@@ -1,9 +1,72 @@
 # Batch Based Text Search and Filtering Pipeline
 
-![Tokenisation of News Articles](https://i.imgur.com/o77Prvh.png)
+The pipeline takes in a large set of text documents and a set of user defined queries, then for each query, text documents are ranked by relevance for that query. The top 10 documents for each query are returned as output. Each document and query is processed to remove stopwords and stemming is applied. Documents are scored using the DPH ranking model.
 
-![Calculation of Total Frequency of Terms](https://i.imgur.com/swLBVMo.png)
+## Spark Topology
+![Tokenisation of News Articles](https://i.imgur.com/o77Prvh.png)
+*Tokenisation of News Articles*
+
+
+![Calculation of Total Frequency of Terms](https://i.imgur.com/a1O1b6H.png)
+*Calculation of Total Frequency of each term in the entire dataset*
 
 ![Ranking of Documents against Queries](https://i.imgur.com/ws7OBMx.png)
+*Ranking of Document against each query*
+
+## Directory Structure
+
+```
+.
+├── bin
+├── data
+│   ├── README.md
+│   ├── TREC_Washington_Post_collection.v3.example.json		
+│   └── queries.list						
+├── resources
+├── results						
+│   └── 1646504628047								
+│       ├── result.finance.documentranking
+│       ├── result.james_bond.documentranking
+│       ├── result.on_Facebook_IPO.documentranking
+│       └── SPARK.DONE
+├── src
+│   └── uk
+│       └── ac
+│           └── gla
+│               └── dcs
+│                   └── bigdata
+│                       ├── apps
+│                       │   └── AssessedExercise.java	
+│                       ├── providedfunctions
+│                       │   ├── NewsFormaterMap.java
+│                       │   └── QueryFormaterMap.java
+│                       ├── providedstructures
+│                       │   ├── ContentItem.java
+│                       │   ├── DocumentRanking.java
+│                       │   ├── NewsArticle.java
+│                       │   ├── Query.java
+│                       │   └── RankedResult.java
+│                       ├── providedutilities
+│                       │   ├── DPHScorer.java
+│                       │   ├── TextDistanceCalculator.java
+│                       │   └── TextPreProcessor.java
+│                       ├── studentfunctions
+│                       │   ├── DPHCalcMapper.java
+│                       │   ├── NewsArticleTermMapper.java
+│                       │   ├── RedundancyCheck.java
+│                       │   ├── TermCountSum.java
+│                       │   ├── TermKeyFunction.java
+│                       │   └── TestTokenize.java
+│                       │
+│                       ├── studentstructures
+│                       │   └── NewsArticleTermMap.java
+│                       │
+│                       └── util
+│                           └── RealizationEngineClient.java
+├── target 
+├── README.md
+└── pom.xml
+
+```
 
 
