@@ -9,7 +9,7 @@ import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.providedutilities.TextDistanceCalculator;
 
 /**
-	 * Check for redundant documents using the provided TextDistanceCalculator class
+	 * Checks for redundant documents using the provided TextDistanceCalculator class
 */
 public class RedundancyCheck implements MapFunction<DocumentRanking,DocumentRanking> {
 

@@ -66,6 +66,7 @@ public class AssessedExercise {
 		SparkConf conf = new SparkConf()
 				.setMaster(sparkMasterDef)
 				.setAppName(sparkSessionName);
+
 		
 		// Create the spark session
 		SparkSession spark = SparkSession
@@ -153,7 +154,7 @@ public class AssessedExercise {
 		Broadcast<List<NewsArticle>> newsArticleBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsList);
 		Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(originalNewsList);
 
-		//Using flatMap transformation function, we transform then Tokenised News Article dataset to a dataset with mapping of the article, query term and count of terms in that article.
+		//Using flatMap transformation function, we transform the Tokenised News Article dataset to a dataset with mapping of the article, query term and count of terms in that article.
 		//This will be utilised to calculate the total frequency of each query term in the whole dataset/corpus
 		Dataset<NewsArticleTermMap> newsArticleTermMap = newsTokenized.flatMap(new NewsArticleTermMapper(queryBroadcast, termCountInDocument), Encoders.bean(NewsArticleTermMap.class));	
 
@@ -175,7 +176,7 @@ public class AssessedExercise {
 		DoubleAccumulator avgScoreAcc = spark.sparkContext().doubleAccumulator();
 		LongAccumulator termFrequencyInCorpus = spark.sparkContext().longAccumulator();
 		LongAccumulator termFrequencyInDocument = spark.sparkContext().longAccumulator();
-
+		LongAccumulator enumerateId = spark.sparkContext().longAccumulator();
 		//The above values are safely passed into the Transformation function where the DPH score is calculated and stored inside DocumentRanking Dataset.
 		Dataset<DocumentRanking> documentRanking = queries.map(
 			new DPHCalcMapper(
@@ -188,7 +189,8 @@ public class AssessedExercise {
 				avgScoreAcc,
 				termFrequencyInCorpus,
 				termFrequencyInDocument,
-				originalNewsArticleListBroadcast
+				originalNewsArticleListBroadcast,
+				enumerateId
 				), 
 			Encoders.bean(DocumentRanking.class));
 		

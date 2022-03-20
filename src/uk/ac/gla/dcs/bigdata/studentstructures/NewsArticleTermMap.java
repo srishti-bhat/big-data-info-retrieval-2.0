@@ -4,7 +4,7 @@ import java.io.Serializable;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 
 /**
-	 * Term mapped with a news article with it's frequency
+	 * Class mapping distinct Query term with a news article and its occurence count in the article
 */
 public class NewsArticleTermMap implements Serializable {
 

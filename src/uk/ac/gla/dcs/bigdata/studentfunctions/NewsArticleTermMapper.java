@@ -14,7 +14,7 @@ import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 
 /**
-	 * Transformation of NewsArticle to NewsArticleTermMap Dataset
+	 * Performs transformation of NewsArticle to NewsArticleTermMap Dataset
 */
 public class NewsArticleTermMapper implements FlatMapFunction<NewsArticle, NewsArticleTermMap>{
 

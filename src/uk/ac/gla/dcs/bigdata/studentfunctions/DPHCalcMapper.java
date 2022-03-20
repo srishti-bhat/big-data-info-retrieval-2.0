@@ -36,6 +36,7 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
     LongAccumulator termFrequencyInCorpus;
     LongAccumulator termFrequencyInDocument;
     Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast;
+    LongAccumulator enumerateId;
 
     private transient TextPreProcessor processor;
 
@@ -45,7 +46,8 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
             Broadcast<Long> totalDocsCountBroadcast, Broadcast<Double> averageDocumentLengthBroadcast,
             Broadcast<List<Tuple2<String, Short>>> termFrequenciesListBroadcast,
             LongAccumulator currDocumentLength, DoubleAccumulator avgScoreAcc,LongAccumulator termFrequencyInCorpus,
-            LongAccumulator termFrequencyInDocument, Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast) {
+            LongAccumulator termFrequencyInDocument, Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast,
+            LongAccumulator enumerateId) {
         this.queryBroadcast = queryBroadcast;
         this.newsArticleListBroadcast = newsArticleListBroadcast;
         this.totalDocsCountBroadcast = totalDocsCountBroadcast;
@@ -56,6 +58,7 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
         this.termFrequencyInCorpus = termFrequencyInCorpus;
         this.termFrequencyInDocument = termFrequencyInDocument;
         this.originalNewsArticleListBroadcast = originalNewsArticleListBroadcast;
+        this.enumerateId = enumerateId;
     }
 
     @Override
@@ -70,8 +73,8 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
         List<NewsArticle> originalNewsArticleList = originalNewsArticleListBroadcast.value(); //Added to get proper output in the results text file
 
         newsArticleListBroadcast.value().forEach(newsArticle->{ //iterating through each article
-            
             avgScoreAcc.setValue(0.0); 
+            enumerateId.add(1);
 
             query.getQueryTerms().forEach(term->{ //iterating through each term
 
@@ -130,7 +133,7 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
 
             rankedResults.add(
                     new RankedResult(
-                            newsArticle.getId(), 
+                            enumerateId.value().longValue(), 
                             originalNewsArticleList.stream().filter(it -> it.getId().contentEquals(newsArticle.getId())).collect(Collectors.toList()).get(0),
                             finalScore));
         });
