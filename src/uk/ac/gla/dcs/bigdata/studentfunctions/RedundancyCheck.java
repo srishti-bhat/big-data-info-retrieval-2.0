@@ -1,6 +1,5 @@
 package uk.ac.gla.dcs.bigdata.studentfunctions;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.spark.api.java.function.MapFunction;
@@ -9,15 +8,14 @@ import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.providedutilities.TextDistanceCalculator;
 
+/**
+	 * Check for redundant documents using the provided TextDistanceCalculator class
+*/
 public class RedundancyCheck implements MapFunction<DocumentRanking,DocumentRanking> {
 
     @Override
     public DocumentRanking call(DocumentRanking documentRanking) throws Exception {
         List<RankedResult> inputResultsSet = documentRanking.getResults();
-
-        Collections.sort(inputResultsSet);
-        Collections.reverse(inputResultsSet);
-
         List<RankedResult> outputResultsSet = new ArrayList<RankedResult>();
         
         for (int i = 0; i < inputResultsSet.size(); i++) {

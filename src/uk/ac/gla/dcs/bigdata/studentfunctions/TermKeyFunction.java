@@ -4,6 +4,9 @@ import org.apache.spark.api.java.function.MapFunction;
 
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 
+/**
+	 * Extract Term from the NewsArticleTermMap class
+*/
 public class TermKeyFunction implements MapFunction<NewsArticleTermMap,String> {
 
     @Override

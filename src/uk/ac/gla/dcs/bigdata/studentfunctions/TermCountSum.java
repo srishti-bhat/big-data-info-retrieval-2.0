@@ -7,6 +7,9 @@ import org.apache.spark.api.java.function.MapGroupsFunction;
 import scala.Tuple2;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 
+/**
+	 * MapGroupFunction to transform NewsArticleTermMap into a tuple 
+*/
 public class TermCountSum implements MapGroupsFunction<String, NewsArticleTermMap, Tuple2<String,Short>> {
 
     @Override

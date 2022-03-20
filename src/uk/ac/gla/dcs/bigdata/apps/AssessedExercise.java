@@ -140,30 +140,40 @@ public class AssessedExercise {
 		// Your Spark Topology should be defined here
 		//----------------------------------------------------------------
 
+		//Initialising accumulators for calculating total count of documents and total length of all the documents
 		LongAccumulator totalDocumentLengthInCorpusAcc = spark.sparkContext().longAccumulator();
 		LongAccumulator totalDocsInCorpusAcc = spark.sparkContext().longAccumulator();
 		LongAccumulator termCountInDocument = spark.sparkContext().longAccumulator();
 		
 		List<Query> queryList = queries.collectAsList();
 
+		//Tokenisation of News Articles. The accumulators are passed as constructor parameters for calculating total count of documents and total length of all the documents.
 		Dataset<NewsArticle> newsTokenized = news.map(new TestTokenize(totalDocumentLengthInCorpusAcc, totalDocsInCorpusAcc), Encoders.bean(NewsArticle.class));
 		List<NewsArticle> newsList = newsTokenized.collectAsList();
 		List<NewsArticle> originalNewsList = news.collectAsList();
 
+		//Calculation of average document length
 		double averageDocumentLengthInCorpus = totalDocumentLengthInCorpusAcc.value() / totalDocsInCorpusAcc.value();
 
+		//Initialising broadcasts to be used by the map functions following them below
 		Broadcast<List<Query>> queryBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryList);
 		Broadcast<List<NewsArticle>> newsArticleBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsList);
 		Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(originalNewsList);
 
+		//Using flatMap transformation function, we transform then Tokenised News Article dataset to a dataset with mapping of the article, query term and count of terms in that article.
+		//This will be utilised to calculate the total frequency of each query term in the whole dataset/corpus
 		Dataset<NewsArticleTermMap> newsArticleTermMap = newsTokenized.flatMap(new NewsArticleTermMapper(queryBroadcast, termCountInDocument), Encoders.bean(NewsArticleTermMap.class));	
 
-
+		//We generate a tuple of the term (String) and it's total frequency(Short) by Grouping the NewsArticleTermMap by Key
+		//The KeyValueGroupDataset is then transformed into the tuple by using the Transformation function mapGroups
 		KeyValueGroupedDataset<String, NewsArticleTermMap> termArticleGrouped = newsArticleTermMap.groupByKey(new TermKeyFunction(), Encoders.STRING());
+		//Tuple Ecnoder for encoding the term (String) and it's frequency (Short)
 		Encoder<Tuple2<String,Short>> termEncoder = Encoders.tuple(Encoders.STRING(), Encoders.SHORT());
+		//Tuple encoder is applied to the mapGroups mapping function to obtain the frequency of each term in the corpus
 		Dataset<Tuple2<String,Short>> termFrequencies = termArticleGrouped.mapGroups(new TermCountSum(), termEncoder);
 		List<Tuple2<String, Short>> termFrequenciesList = termFrequencies.collectAsList();
 
+		//Initilisation of Broadcasts and Accumulators to be used for calculating the DPH Score
 		Broadcast<Long> totalDocsCountBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalDocsInCorpusAcc.value());
 		Broadcast<Double> averageDocumentLengthBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(averageDocumentLengthInCorpus);
 		Broadcast<List<Tuple2<String, Short>>> termFrequenciesListBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(termFrequenciesList);
@@ -173,6 +183,7 @@ public class AssessedExercise {
 		LongAccumulator termFrequencyInCorpus = spark.sparkContext().longAccumulator();
 		LongAccumulator termFrequencyInDocument = spark.sparkContext().longAccumulator();
 
+		//The above values are safely passed into the Transformation function where the DPH score is calculated and stored inside DocumentRanking Dataset.
 		Dataset<DocumentRanking> documentRanking = queries.map(
 			new DPHCalcMapper(
 				queryBroadcast, 
@@ -188,9 +199,9 @@ public class AssessedExercise {
 				), 
 			Encoders.bean(DocumentRanking.class));
 		
-
+		//The ranking of documents for each query is analysed in the RedundancyCheck mapping function and redundant documents are removed
 		Dataset<DocumentRanking> documentRankingFinal = documentRanking.map(new RedundancyCheck(), Encoders.bean(DocumentRanking.class));
-		
+		//Final collection containing top 10 documents relevant to each query.
 		List<DocumentRanking> documentRankingFinalList = documentRankingFinal.collectAsList();
 		return documentRankingFinalList; 
 	}	
