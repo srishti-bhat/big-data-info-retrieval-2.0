@@ -3,8 +3,16 @@
 The pipeline takes in a large set of text documents and a set of user defined queries, then for each query, text documents are ranked by relevance for that query. The top 10 documents for each query are returned as output. Each document and query is processed to remove stopwords and stemming is applied. Documents are scored using the DPH ranking model.
 
 ## Spark Topology
-![Tokenisation of News Articles](https://i.imgur.com/o77Prvh.png)
-*Tokenisation of News Articles*
+![Tokenisation of News Articles]()
+**
+<p align="center">
+<figure>
+  <img
+  src="https://i.imgur.com/o77Prvh.png"
+  alt="Tokenisation of News Articles.">
+  <figcaption>Tokenisation of News Articles</figcaption>
+</figure>
+</p>
 
 
 ![Calculation of Total Frequency of Terms](https://i.imgur.com/a1O1b6H.png)
