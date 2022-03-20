@@ -41,6 +41,7 @@ public class NewsFormaterMap implements MapFunction<Row,NewsArticle> {
 		NewsArticle article = jsonMapper.readValue(value.mkString(), NewsArticle.class);
 
 		String title = terms2String(processor.process(article.getTitle()));
+		totalDocumentLengthInCorpusAcc.add(title.length());
 		article.setTitle(title);
 		
 		for (int i =0; i<article.getContents().size(); i++) {
@@ -49,7 +50,7 @@ public class NewsFormaterMap implements MapFunction<Row,NewsArticle> {
 				String processedContent = terms2String(processor.process(content.getContent()));
 				content.setContent(processedContent);
 				if(processedContent != null){
-                    totalDocumentLengthInCorpusAcc.add(title.length() + processedContent.length());
+                    totalDocumentLengthInCorpusAcc.add(processedContent.length());
                 }
 			}
 		}

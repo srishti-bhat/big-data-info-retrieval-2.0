@@ -13,18 +13,25 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.KeyValueGroupedDataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.util.DoubleAccumulator;
 import org.apache.spark.util.LongAccumulator;
 
+import scala.Tuple2;
 import uk.ac.gla.dcs.bigdata.providedfunctions.NewsFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
+import uk.ac.gla.dcs.bigdata.studentfunctions.DPHCalcMapper;
 import uk.ac.gla.dcs.bigdata.studentfunctions.NewsArticleTermMapper;
+import uk.ac.gla.dcs.bigdata.studentfunctions.TermCountSum;
+import uk.ac.gla.dcs.bigdata.studentfunctions.TermKeyFunction;
 import uk.ac.gla.dcs.bigdata.studentfunctions.TestTokenize;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 
@@ -136,12 +143,42 @@ public class AssessedExercise {
 		List<NewsArticle> newsList = news.collectAsList();
 
 		Broadcast<List<Query>> queryBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryList);
+		Broadcast<List<NewsArticle>> newsArticleBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsList);
 
 		Dataset<NewsArticleTermMap> newsArticleTermMap = news.flatMap(new NewsArticleTermMapper(queryBroadcast, termCountInDocument), Encoders.bean(NewsArticleTermMap.class));	
 		List<NewsArticleTermMap> newsArticleTermMapList = newsArticleTermMap.collectAsList();
 
 		double averageDocumentLengthInCorpus = totalDocumentLengthInCorpusAcc.value() / totalDocsInCorpusAcc.value();
-		int i = 0;
+
+		KeyValueGroupedDataset<String, NewsArticleTermMap> termArticleGrouped = newsArticleTermMap.groupByKey(new TermKeyFunction(), Encoders.STRING());
+		Encoder<Tuple2<String,Short>> termEncoder = Encoders.tuple(Encoders.STRING(), Encoders.SHORT());
+		Dataset<Tuple2<String,Short>> termFrequencies = termArticleGrouped.mapGroups(new TermCountSum(), termEncoder);
+		List<Tuple2<String, Short>> termFrequenciesList = termFrequencies.collectAsList();
+
+		Broadcast<Long> totalDocsCountBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalDocsInCorpusAcc.value());
+		Broadcast<Double> averageDocumentLengthBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(averageDocumentLengthInCorpus);
+		Broadcast<List<Tuple2<String, Short>>> termFrequenciesListBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(termFrequenciesList);
+		Broadcast<List<NewsArticleTermMap>> newsArticleTermMapListtBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsArticleTermMapList);
+
+		LongAccumulator currDocumentLength = spark.sparkContext().longAccumulator();
+		DoubleAccumulator avgScoreAcc = spark.sparkContext().doubleAccumulator();
+		LongAccumulator termFrequencyInCorpus = spark.sparkContext().longAccumulator();
+		LongAccumulator termFrequencyInDocument = spark.sparkContext().longAccumulator();
+
+		Dataset<DocumentRanking> documentRanking = queries.map(
+			new DPHCalcMapper(
+				queryBroadcast, 
+				newsArticleBroadcast,
+				totalDocsCountBroadcast, 
+				averageDocumentLengthBroadcast, 
+				termFrequenciesListBroadcast,
+				currDocumentLength,
+				avgScoreAcc,
+				termFrequencyInCorpus,
+				termFrequencyInDocument
+				), 
+			Encoders.bean(DocumentRanking.class));
+		List<DocumentRanking> documentRankingList = documentRanking.collectAsList();
 
 		Dataset<NewsArticle> newsTokenized = news.map(new TestTokenize(), Encoders.bean(NewsArticle.class));
 		
