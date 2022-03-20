@@ -6,21 +6,21 @@ The pipeline takes in a large set of text documents and a set of user defined qu
 
 <figure align="center">
   <img width="900" height="340"
-  src="https://i.imgur.com/o77Prvh.png"
+  src="https://i.imgur.com/yDqC5sq.png"
   alt="Tokenisation of News Articles.">
   <figcaption>Tokenisation of News Articles</figcaption>
 </figure>
 
 <figure align="center">
   <img width="900" height="420"
-  src="https://i.imgur.com/a1O1b6H.png"
+  src="https://i.imgur.com/PPdADsb.png"
   alt="Calculation of Total Frequency of each term in the entire dataset.">
   <figcaption>Calculation of Total Frequency of each term in the entire dataset</figcaption>
 </figure>
 
 <figure align="center">
   <img width="900" height="270"
-  src="https://i.imgur.com/ws7OBMx.png"
+  src="https://i.imgur.com/pU9ak0R.png"
   alt="Ranking of Document against each query.">
   <figcaption>Ranking of Document against each query</figcaption>
 </figure>
