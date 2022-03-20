@@ -2,13 +2,12 @@ package uk.ac.gla.dcs.bigdata.studentfunctions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.util.DoubleAccumulator;
@@ -21,7 +20,6 @@ import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.providedutilities.DPHScorer;
 import uk.ac.gla.dcs.bigdata.providedutilities.TextPreProcessor;
-import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 
 public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
 
@@ -34,6 +32,7 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
     DoubleAccumulator avgScoreAcc;
     LongAccumulator termFrequencyInCorpus;
     LongAccumulator termFrequencyInDocument;
+    Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast;
 
     private transient TextPreProcessor processor;
 
@@ -43,7 +42,7 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
             Broadcast<Long> totalDocsCountBroadcast, Broadcast<Double> averageDocumentLengthBroadcast,
             Broadcast<List<Tuple2<String, Short>>> termFrequenciesListBroadcast,
             LongAccumulator currDocumentLength, DoubleAccumulator avgScoreAcc,LongAccumulator termFrequencyInCorpus,
-            LongAccumulator termFrequencyInDocument) {
+            LongAccumulator termFrequencyInDocument, Broadcast<List<NewsArticle>> originalNewsArticleListBroadcast) {
         this.queryBroadcast = queryBroadcast;
         this.newsArticleListBroadcast = newsArticleListBroadcast;
         this.totalDocsCountBroadcast = totalDocsCountBroadcast;
@@ -53,6 +52,7 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
         this.avgScoreAcc = avgScoreAcc;
         this.termFrequencyInCorpus = termFrequencyInCorpus;
         this.termFrequencyInDocument = termFrequencyInDocument;
+        this.originalNewsArticleListBroadcast = originalNewsArticleListBroadcast;
     }
 
     @Override
@@ -63,7 +63,8 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
         List<RankedResult> rankedResults = new ArrayList<RankedResult>();
 
         List<Tuple2<String, Short>> termFrequenciesList = termFrequenciesListBroadcast.value();
-        
+
+        List<NewsArticle> originalNewsArticleList = originalNewsArticleListBroadcast.value();
         newsArticleListBroadcast.value().forEach(newsArticle->{
             
             avgScoreAcc.setValue(0.0);
@@ -72,22 +73,21 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
                 double score = 0.0;
                 List<String> concatList = new ArrayList<String>();
                 concatList.add(newsArticle.getTitle());
+                
                 currDocumentLength.setValue(0);
                 currDocumentLength.add(newsArticle.getTitle().length());
+
                 newsArticle.getContents().forEach(content -> {
-                    if(content.getContent() != null){
+                    int paragraphs = 0;
+                    if(content.getContent() != null && content.getSubtype() == "paragraph" && paragraphs < 5){
                         currDocumentLength.add(content.getContent().length());
                         concatList.add(content.getContent());
-                    }else if(content.getSubtype() == "image"){
-                        currDocumentLength.add(content.getBlurb().length());
-                        concatList.add(content.getBlurb());
+                        paragraphs += 1;
                     }
                 });
-
                 
                 String joined = String.join("", concatList);
                 List<String> joinedSplit = Arrays.asList(joined.split(" "));
-
                 
                 joinedSplit.forEach(str -> {
                     if(str.contains(term)){
@@ -100,7 +100,9 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
                         termFrequencyInCorpus.setValue(corpusTerm._2.shortValue());
                     }
                 });
+
                 int v1 = termFrequencyInDocument.value().shortValue();
+                long v = termFrequencyInDocument.sum();
                 int v2 = (int)termFrequencyInCorpus.sum();
                 int v3 = (int)currDocumentLength.sum();
                 Double v4 = averageDocumentLengthBroadcast.value();
@@ -114,23 +116,24 @@ public class DPHCalcMapper implements MapFunction<Query,DocumentRanking>{
                     totalDocsCountBroadcast.value().longValue()
                 );
 
-                if (Double.isNaN(score) || Double.isInfinite(score))
+                if (Double.isNaN(score))
 					score = 0.0;
 				
 				avgScoreAcc.add(score);
-                });
-                int qsize = query.getQueryTerms().size();
-                double finalScore = avgScoreAcc.sum()/qsize;
-                rankedResults.add(
-                        new RankedResult(
-                            newsArticle.getId(), 
-                            newsArticle,
-                            finalScore));
             });
+            int qsize = query.getQueryTerms().size();
+            double finalScore = avgScoreAcc.sum()/qsize;
+
+            rankedResults.add(
+                    new RankedResult(
+                            newsArticle.getId(), 
+                            originalNewsArticleList.stream().filter(it -> it.getId().contentEquals(newsArticle.getId())).collect(Collectors.toList()).get(0),
+                            finalScore));
+        });
         
-        Collections.sort(rankedResults);
-        Collections.reverse(rankedResults);
-       return new DocumentRanking(
+    Collections.sort(rankedResults);
+    Collections.reverse(rankedResults);
+    return new DocumentRanking(
             query,
             rankedResults
         );

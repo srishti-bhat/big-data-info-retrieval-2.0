@@ -44,14 +44,13 @@ public class NewsArticleTermMapper implements FlatMapFunction<NewsArticle, NewsA
             List<String> concatList = new ArrayList<String>();
                 concatList.add(newsArticle.getTitle());
                 newsArticle.getContents().forEach(content -> {
-                    if(content.getContent() != null){
+                    int paragraphs = 0;
+                    if(content.getContent() != null && content.getSubtype() == "paragraph" && paragraphs < 5){
                         concatList.add(content.getContent());
-                    }else if(content.getSubtype() == "image"){
-                        concatList.add(content.getBlurb());
+                        paragraphs += 1;
                     }
                 });
 
-                
                 String joined = String.join("", concatList);
                 List<String> joinedSplit = Arrays.asList(joined.split(" "));
                 

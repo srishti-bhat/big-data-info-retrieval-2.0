@@ -3,6 +3,7 @@ package uk.ac.gla.dcs.bigdata.studentfunctions;
 import java.util.List;
 
 import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.util.LongAccumulator;
 
 import uk.ac.gla.dcs.bigdata.providedstructures.ContentItem;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
@@ -18,7 +19,16 @@ public class TestTokenize implements MapFunction<NewsArticle,NewsArticle> {
 	private static final long serialVersionUID = 4638169702466249304L;
 	
 	private transient TextPreProcessor processor;
+
 	
+    LongAccumulator totalDocumentLengthInCorpusAcc;
+	LongAccumulator totalDocsInCorpusAcc;
+	
+	public TestTokenize(LongAccumulator totalDocumentLengthInCorpusAcc, LongAccumulator totalDocsInCorpusAcc) {
+		this.totalDocumentLengthInCorpusAcc = totalDocumentLengthInCorpusAcc;
+		this.totalDocsInCorpusAcc = totalDocsInCorpusAcc;
+	}
+
 	/**
 	 * Called for each news article, applies the text pre-processor on all text in the article
 	 */
@@ -26,8 +36,10 @@ public class TestTokenize implements MapFunction<NewsArticle,NewsArticle> {
 	public NewsArticle call(NewsArticle article) throws Exception {
 		
 		if (processor==null) processor = new TextPreProcessor();
+		
 
 		String title = terms2String(processor.process(article.getTitle()));
+		totalDocumentLengthInCorpusAcc.add(title.length());
 		article.setTitle(title);
 		
 		for (int i =0; i<article.getContents().size(); i++) {
@@ -35,10 +47,15 @@ public class TestTokenize implements MapFunction<NewsArticle,NewsArticle> {
 			if (content.getContent()!=null) {
 				String processedContent = terms2String(processor.process(content.getContent()));
 				content.setContent(processedContent);
+				if(processedContent != null){
+                    totalDocumentLengthInCorpusAcc.add(processedContent.length());
+                }
 			}
 		}
+		totalDocsInCorpusAcc.add(1);
 		
 		return article;
+
 	}
 	
 	/**

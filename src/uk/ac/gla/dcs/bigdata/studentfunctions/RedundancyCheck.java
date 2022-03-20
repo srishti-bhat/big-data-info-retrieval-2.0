@@ -19,21 +19,31 @@ public class RedundancyCheck implements MapFunction<DocumentRanking,DocumentRank
         Collections.reverse(inputResultsSet);
 
         List<RankedResult> outputResultsSet = new ArrayList<RankedResult>();
+        
+        for (int i = 0; i < inputResultsSet.size(); i++) {
 
-        for(int i = 0; i < documentRanking.getResults().size(); i++){
-            for(int j = i + 1; j < documentRanking.getResults().size(); j++){
-                if(TextDistanceCalculator.similarity(
-                    inputResultsSet.get(i).getArticle().getTitle(), 
-                    inputResultsSet.get(j).getArticle().getTitle()
-                    ) < 0.5){
-                    inputResultsSet.remove(inputResultsSet.get(j)); 
+            int flag = 0;
+            RankedResult inputDoc= inputResultsSet.get(i);
+
+            for (int j = 0; j < outputResultsSet.size(); j++) {
+                if (TextDistanceCalculator.similarity(
+                    inputDoc.getArticle().getTitle(),outputResultsSet.get(j).getArticle().getTitle())
+                     < 0.5) {
+                    flag = 1;
+                    break;
                 }
             }
-        }
-        for(int k =0; k < 10; k++){
-            outputResultsSet.add(inputResultsSet.get(k));
-        }
+            if (flag == 0) {
+                outputResultsSet.add(inputDoc);
+            }
 
+            if (outputResultsSet.size() == 10) {
+                break;
+            }
+           
+        }; 
+
+        
         return new DocumentRanking(documentRanking.getQuery(), outputResultsSet);
     }
 
