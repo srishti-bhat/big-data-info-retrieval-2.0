@@ -1,6 +1,7 @@
 package uk.ac.gla.dcs.bigdata.studentfunctions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,17 +41,25 @@ public class NewsArticleTermMapper implements FlatMapFunction<NewsArticle, NewsA
 
         queryTermsFlattened.forEach(term->{
             termCountInDocument.setValue(0);
-            if(newsArticle.getTitle().contains(term)){
-                termCountInDocument.add(1);
-            }
+            List<String> concatList = new ArrayList<String>();
+                concatList.add(newsArticle.getTitle());
+                newsArticle.getContents().forEach(content -> {
+                    if(content.getContent() != null){
+                        concatList.add(content.getContent());
+                    }else if(content.getSubtype() == "image"){
+                        concatList.add(content.getBlurb());
+                    }
+                });
 
-            newsArticle.getContents().forEach(content->{
-                if(content.getContent() != null){
-                    if(content.getContent().contains(term)){
+                
+                String joined = String.join("", concatList);
+                List<String> joinedSplit = Arrays.asList(joined.split(" "));
+                
+                joinedSplit.forEach(str -> {
+                    if(str.contains(term)){
                         termCountInDocument.add(1);
                     }
-                }
-            });
+                });
 
             newsArticleTermMapList.add(
                 new NewsArticleTermMap(

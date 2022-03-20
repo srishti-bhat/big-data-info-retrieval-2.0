@@ -13,16 +13,13 @@ public class RemoteSubmit {
 		System.out.println("#----------------------------------");
 
 		System.out.println("Arguments:");
-		System.out.println("  1) TeamID: This should be the name of your team as it appears in the gitlab url, for");
-		System.out.println("             instance 'Data Vikings' should be entered as 'data-vikings'");
-		System.out.println("  1) Project: This should be the name of the project within the gitlab you want to test,");
-		System.out.println("              again as it appears in the gitlab url, for instance a project called  'BigData-AE'");
-		System.out.println("              should be entered as 'bigdata-ae'");
+		System.out.println("  1) TeamID: 3titans");
+		System.out.println("  1) Project: big-data-assessed-exercise-final");
 		
 		
 		args = new String[] {
-				"remote", // Change this to your teamid
-				"test"    // Change this to your project
+				"3titans", // Change this to your teamid
+				"big-data-assessed-exercise-final"    // Change this to your project
 			};
 		
 		if (args.length!=2 || args[0].equalsIgnoreCase("TODO")) {

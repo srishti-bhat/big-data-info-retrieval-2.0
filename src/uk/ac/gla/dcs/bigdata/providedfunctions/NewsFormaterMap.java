@@ -39,7 +39,7 @@ public class NewsFormaterMap implements MapFunction<Row,NewsArticle> {
 		if (jsonMapper==null) jsonMapper = new ObjectMapper();
 		
 		NewsArticle article = jsonMapper.readValue(value.mkString(), NewsArticle.class);
-
+		
 		String title = terms2String(processor.process(article.getTitle()));
 		totalDocumentLengthInCorpusAcc.add(title.length());
 		article.setTitle(title);

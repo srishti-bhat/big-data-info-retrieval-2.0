@@ -27,12 +27,11 @@ import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
-import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.studentfunctions.DPHCalcMapper;
 import uk.ac.gla.dcs.bigdata.studentfunctions.NewsArticleTermMapper;
+import uk.ac.gla.dcs.bigdata.studentfunctions.RedundancyCheck;
 import uk.ac.gla.dcs.bigdata.studentfunctions.TermCountSum;
 import uk.ac.gla.dcs.bigdata.studentfunctions.TermKeyFunction;
-import uk.ac.gla.dcs.bigdata.studentfunctions.TestTokenize;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleTermMap;
 
 
@@ -180,27 +179,10 @@ public class AssessedExercise {
 			Encoders.bean(DocumentRanking.class));
 		List<DocumentRanking> documentRankingList = documentRanking.collectAsList();
 
-		Dataset<NewsArticle> newsTokenized = news.map(new TestTokenize(), Encoders.bean(NewsArticle.class));
+		Dataset<DocumentRanking> documentRankingFinal = documentRanking.map(new RedundancyCheck(), Encoders.bean(DocumentRanking.class));
 		
-		// collect some articles
-		List<NewsArticle> first10 = news.takeAsList(10);
-		
-		// create a dummy document ranking manually so we can return something
-		List<RankedResult> results = new ArrayList<RankedResult>(10);
-		for (NewsArticle article : first10) {
-			RankedResult result = new RankedResult(article.getId(), article, 1.0);
-			results.add(result);
-			
-		}
-		DocumentRanking ranking = new DocumentRanking(queryList.get(0), results);
-		
-		// convert to list
-		List<DocumentRanking> rankingList = new ArrayList<DocumentRanking>(1);
-		rankingList.add(ranking);
-		
-		return rankingList;
-
-	}
-	
+		List<DocumentRanking> documentRankingFinalList = documentRankingFinal.collectAsList();
+		return documentRankingFinalList; 
+	}	
 	
 }
