@@ -1,9 +1,9 @@
 # Batch Based Text Search and Filtering Pipeline
 
-[https://imgur.com/o77Prvh][Tokenisation of News Articles]
+![Tokenisation of News Articles](https://imgur.com/o77Prvh)
 
-[https://imgur.com/swLBVMo][Calculation of Total Frequency of Terms]
+![Calculation of Total Frequency of Terms](https://imgur.com/swLBVMo)
 
-[https://imgur.com/ws7OBMx][Ranking of Documents against Queries]
+![Ranking of Documents against Queries](https://imgur.com/ws7OBMx)
 
 
